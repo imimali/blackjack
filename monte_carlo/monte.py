@@ -3,9 +3,10 @@
     
     @author: Gergely
 '''
+import operator
+
 from environment.env import (step,
                              init_state,
-                             Easy21State,
                              Easy21Action)
 
 from collections import namedtuple
@@ -14,14 +15,9 @@ StateActionPair = namedtuple('StateActionPair', 'state action')
 
 
 def player_policy(state, q):
-    action_values = {pair.action: q[pair] for pair in q if pair.state == state}
-    max_action = Easy21Action.HIT
-    max_action_value = 0
-    for action in action_values:
-        if action_values[action] > max_action_value:
-            max_action_value = action_values[action]
-            max_action = action
-    return max_action
+    action_values = q[state] if state in q else Easy21Action.to_action_map()
+    return max(action_values.items(), key=operator.itemgetter(1))[0]
+    # return Easy21Action.HIT if state.player_sum < 17 else Easy21Action.STICK
 
 
 def sample_episode(q):
@@ -36,19 +32,26 @@ def sample_episode(q):
             return episode
 
 
-def monte_carlo(nr_episodes=100):
+def monte_carlo(nr_episodes=50000):
     visits = {}
     q = {}
     for _ in range(nr_episodes):
-        print(len(q))
         episode = sample_episode(q)
         final_reward = episode[-1][2]
         for sample in episode:
-            pair = StateActionPair(sample[0], sample[1])
-            visits[pair] = 1 if pair not in visits else visits[pair] + 1
-            q[pair] = (final_reward / visits[pair]
-                       if pair not in q
-                       else q[pair] + (final_reward - q[pair]) / visits[pair])
+            state = sample[0]
+            action = sample[1]
+            if state not in visits:
+                visits[state] = Easy21Action.to_action_map()
+            visits[state][action] += 1
+            if state not in q:
+                q[state] = Easy21Action.to_action_map()
+            q[state][action] = (q[state][action] + (final_reward - q[state][action]) /
+                                visits[state][action])
+
+    return q
 
 
-monte_carlo()
+qs = monte_carlo()
+for q in qs:
+    print(q,qs[q])
