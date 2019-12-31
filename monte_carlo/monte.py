@@ -4,27 +4,27 @@
     @author: Gergely
 '''
 import operator
-
+import random
 from environment.env import (step,
                              init_state,
                              Easy21Action)
 
-from collections import namedtuple
 
-StateActionPair = namedtuple('StateActionPair', 'state action')
-
-
-def player_policy(state, q):
+def player_policy(state, q, state_visits):
     action_values = q[state] if state in q else Easy21Action.to_action_map()
+    epsilon_t = 100 / (100 + state_visits)
+    if random.random() > epsilon_t / 2 + 1 - epsilon_t:
+        return random.choice(list(action_values.keys()))
     return max(action_values.items(), key=operator.itemgetter(1))[0]
     # return Easy21Action.HIT if state.player_sum < 17 else Easy21Action.STICK
 
 
-def sample_episode(q):
+def sample_episode(q, visits):
     state = init_state()
     episode = []
     while True:
-        action = player_policy(state, q)
+        state_visits = 0 if not state in visits else sum(visits[state].values())
+        action = player_policy(state, q, state_visits)
         next_state, done, reward = step(state, action)
         episode.append((state, action, reward, next_state, done))
         state = next_state
@@ -32,12 +32,13 @@ def sample_episode(q):
             return episode
 
 
-def monte_carlo(nr_episodes=50000):
+def monte_carlo(nr_episodes=500000):
     visits = {}
     q = {}
     for _ in range(nr_episodes):
-        episode = sample_episode(q)
+        episode = sample_episode(q, visits)
         final_reward = episode[-1][2]
+        #print('final reward is',final_reward)
         for sample in episode:
             state = sample[0]
             action = sample[1]
@@ -53,5 +54,7 @@ def monte_carlo(nr_episodes=50000):
 
 
 qs = monte_carlo()
+print(len(qs))
 for q in qs:
-    print(q,qs[q])
+    pass
+    print(q, qs[q])

@@ -6,6 +6,7 @@
 
 import random
 from collections import namedtuple
+from enum import Enum
 
 Easy21State = namedtuple('Easy21State', 'dealer_card player_sum')
 
@@ -13,9 +14,13 @@ Easy21State = namedtuple('Easy21State', 'dealer_card player_sum')
 # Easy21State.__hash__ = lambda state: state.dealer_card + state.player_sum
 
 
-class Easy21Action:
+class Easy21Action(Enum):
     HIT = 'hit'
     STICK = 'stick'
+
+    @staticmethod
+    def to_action_map():
+        return {e.value: 0 for e in Easy21Action}
 
 
 def dealer_action(dealer_sum):
@@ -28,30 +33,35 @@ def _sample_card():
     return card_color * card_number
 
 
-def step(state: Easy21State, action: str):
-    if action is Easy21Action.HIT:
+def step(state: Easy21State, action):
+    if action == Easy21Action.HIT.value:
         player_card = _sample_card()
 
         player_sum = player_card + state.player_sum
         reward = 0
         done = False
-        if not 21 > player_sum > 1:
+        if not 21 > player_sum >= 1:
             reward = -1
             done = True
+        if player_sum == 21:
+            reward = 1
         return Easy21State(dealer_card=state.dealer_card, player_sum=player_sum), done, reward
-    elif action is Easy21Action.STICK:
+    elif action is Easy21Action.STICK.value:
         dealer_card = _sample_card()
         dealer_sum = state.dealer_card + dealer_card
 
         action = dealer_action(dealer_sum)
-        while action is Easy21Action.HIT and 21 > dealer_sum > 1:
+        while action is Easy21Action.HIT and 21 > dealer_sum >= 1:
             dealer_sum += _sample_card()
+            action = dealer_action(dealer_sum)
         print('dealer sum is', dealer_sum)
         if action is Easy21Action.STICK:
-            reward = 0 if dealer_sum == state.player_sum else 1 if dealer_sum < state.player_sum else -1
+            reward = (0 if dealer_sum == state.player_sum
+                      else 1 if dealer_sum < state.player_sum or dealer_sum > 21 else -1)
             return state, True, reward
         else:
-            return state, True, 1
+            reward = -1 if dealer_sum == 21 else 1
+            return state, True, reward
 
 
 def init_state():
@@ -61,15 +71,12 @@ def init_state():
 def game():
     state = init_state()
     done = False
+    print(state)
     while not done:
-        action = Easy21Action.HIT
+        action = Easy21Action.HIT.value if state.player_sum < 17 else Easy21Action.STICK.value
         state, done, reward = step(state, action)
+        print(state, action, reward)
+    print()
 
 
-s = Easy21State(dealer_card=1, player_sum=12)
-s1 = Easy21State(dealer_card=2, player_sum=13)
-print(s.__hash__())
-print(s.__hash__())
-print(s1.__hash__())
-print(s1.__hash__())
-
+[game() for _ in range(10)]
