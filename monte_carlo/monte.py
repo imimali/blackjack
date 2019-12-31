@@ -32,13 +32,13 @@ def sample_episode(q, visits):
             return episode
 
 
-def monte_carlo(nr_episodes=500000):
+def monte_carlo(nr_episodes=800000):
     visits = {}
     q = {}
     for _ in range(nr_episodes):
         episode = sample_episode(q, visits)
         final_reward = episode[-1][2]
-        #print('final reward is',final_reward)
+        # print('final reward is',final_reward)
         for sample in episode:
             state = sample[0]
             action = sample[1]

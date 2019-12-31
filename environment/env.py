@@ -23,8 +23,8 @@ class Easy21Action(Enum):
         return {e.value: 0 for e in Easy21Action}
 
 
-def dealer_action(dealer_sum):
-    return Easy21Action.HIT if dealer_sum < 17 else Easy21Action.STICK
+def dealer_policy(dealer_sum):
+    return Easy21Action.HIT.value if dealer_sum < 17 else Easy21Action.STICK.value
 
 
 def _sample_card():
@@ -50,12 +50,12 @@ def step(state: Easy21State, action):
         dealer_card = _sample_card()
         dealer_sum = state.dealer_card + dealer_card
 
-        action = dealer_action(dealer_sum)
-        while action is Easy21Action.HIT and 21 > dealer_sum >= 1:
+        action = dealer_policy(dealer_sum)
+        while action is Easy21Action.HIT.value and 21 > dealer_sum >= 1:
             dealer_sum += _sample_card()
-            action = dealer_action(dealer_sum)
+            action = dealer_policy(dealer_sum)
         print('dealer sum is', dealer_sum)
-        if action is Easy21Action.STICK:
+        if action is Easy21Action.STICK.value:
             reward = (0 if dealer_sum == state.player_sum
                       else 1 if dealer_sum < state.player_sum or dealer_sum > 21 else -1)
             return state, True, reward
@@ -78,5 +78,4 @@ def game():
         print(state, action, reward)
     print()
 
-
-[game() for _ in range(10)]
+# [game() for _ in range(10)]
