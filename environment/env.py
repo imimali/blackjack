@@ -54,7 +54,7 @@ def step(state: Easy21State, action):
         while action is Easy21Action.HIT.value and 21 > dealer_sum >= 1:
             dealer_sum += _sample_card()
             action = dealer_policy(dealer_sum)
-        print('dealer sum is', dealer_sum)
+        # print('dealer sum is', dealer_sum)
         if action is Easy21Action.STICK.value:
             reward = (0 if dealer_sum == state.player_sum
                       else 1 if dealer_sum < state.player_sum or dealer_sum > 21 else -1)

@@ -23,7 +23,7 @@ def sample_episode(q, visits):
     state = init_state()
     episode = []
     while True:
-        state_visits = 0 if not state in visits else sum(visits[state].values())
+        state_visits = 0 if state not in visits else sum(visits[state].values())
         action = player_policy(state, q, state_visits)
         next_state, done, reward = step(state, action)
         episode.append((state, action, reward, next_state, done))
@@ -35,7 +35,9 @@ def sample_episode(q, visits):
 def monte_carlo(nr_episodes=800000):
     visits = {}
     q = {}
-    for _ in range(nr_episodes):
+    for e in range(nr_episodes):
+        if e % 10000 == 0:
+            print(f'running episode {e}')
         episode = sample_episode(q, visits)
         final_reward = episode[-1][2]
         # print('final reward is',final_reward)
