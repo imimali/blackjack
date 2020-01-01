@@ -3,30 +3,23 @@
     
     @author: Gergely
 '''
-import operator
-import random
 
-from environment.env import (step, Easy21Action, init_state)
-
-
-def player_policy(state, q, epsilon=1e-1):
-    action_values = q[state] if state in q else Easy21Action.to_action_map()
-    if random.random() > epsilon / 2 + 1 - epsilon:
-        return random.choice(list(action_values.keys()))
-    return max(action_values.items(), key=operator.itemgetter(1))[0]
-    # return Easy21Action.HIT if state.player_sum < 17 else Easy21Action.STICK
+from environment.env import (step, Easy21Action, init_state, Easy21State)
+from td.epsilon_greedy import epsilon_greedy_player_policy
 
 
-def sarsa(nr_episodes=800000, alpha=0.9, gamma=0.99):
+def sarsa(nr_episodes=8000000, alpha=0.01, gamma=0.99):
     q = {}
     for episode in range(nr_episodes):
         if episode % 10000 == 0:
             print(f'{episode} episodes run')
+            if Easy21State(dealer_card=5, player_sum=20) in q:
+                print(q[Easy21State(dealer_card=5, player_sum=20)])
         state = init_state()
-        action = player_policy(state, q)
+        action = epsilon_greedy_player_policy(state, q)
         while True:
             s_prime, done, reward = step(state, action)
-            a_prime = player_policy(s_prime, q)
+            a_prime = epsilon_greedy_player_policy(s_prime, q)
             if state not in q:
                 q[state] = Easy21Action.to_action_map()
             if s_prime not in q:
